@@ -1,0 +1,21 @@
+DESCRIPTION generated from ./yellow_tripdata_2019_q1.csv
+
+SCHEMA >
+    `vendorid` Int16,
+    `tpep_pickup_datetime` DateTime,
+    `tpep_dropoff_datetime` DateTime,
+    `passenger_count` Int16,
+    `trip_distance` Float32,
+    `ratecodeid` Int16,
+    `store_and_fwd_flag` String,
+    `pulocationid` Int32,
+    `dolocationid` Int32,
+    `payment_type` Int16,
+    `fare_amount` Float32,
+    `extra` Float32,
+    `mta_tax` Float32,
+    `tip_amount` Float32,
+    `tolls_amount` Float32,
+    `improvement_surcharge` Float32,
+    `total_amount` Float32,
+    `congestion_surcharge` Nullable(String)

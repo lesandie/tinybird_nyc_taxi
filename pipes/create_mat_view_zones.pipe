@@ -1,0 +1,25 @@
+NODE select_zone_name
+SQL >
+    SELECT
+        ytp.tpep_pickup_datetime AS pickup_datetime,
+        ytp.tpep_dropoff_datetime AS dropoff_datetime,
+        ytp.pulocationid AS pulocationid,
+        ytp.dolocationid AS dolocationid,
+        tzu.zone AS puzone,
+        tzo.zone AS dozone,
+        ytp.passenger_count AS passenger_count,
+        ytp.trip_distance AS trip_distance,
+        ytp.ratecodeid AS ratecodeid,
+        ytp.payment_type AS payment_type,
+        ytp.fare_amount AS fare_amount,
+        ytp.extra AS extra,
+        ytp.mta_tax AS mta_tax,
+        ytp.tip_amount AS tip_amount,
+        ytp.tolls_amount AS tolls_amount,
+        ytp.total_amount AS total_amount
+    FROM yellow_tripdata_2019_q1 ytp
+    JOIN taxi_zone_lookup tzu ON ytp.pulocationid = tzu.locationid
+    JOIN taxi_zone_lookup tzo ON ytp.dolocationid = tzo.locationid
+
+TYPE materialized
+DATASOURCE  mat_view_zones

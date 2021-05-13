@@ -1,0 +1,18 @@
+
+SCHEMA >
+    `pickup_datetime` DateTime,
+    `dropoff_datetime` DateTime,
+    `pulocationid` Int32,
+    `dolocationid` Int32,
+    `puzone` String,
+    `dozone` String,
+    `passenger_count` Int16,
+    `trip_distance` Float32,
+    `ratecodeid` Int16,
+    `payment_type` Int16,
+    `fare_amount` Int32,
+    `extra` Int32,
+    `mta_tax` Int32,
+    `tip_amount` Int32,
+    `tolls_amount` Int32,
+    `total_amount` Int32
