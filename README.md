@@ -135,7 +135,8 @@ The pipe:
 ```sql
 NODE select_zone_name
 DESCRIPTION>
-Joins the two datasources into a materialized view with two new columns with the pickup and dropoff zone names (puzone, do zone)
+        Joins the two datasources into a materialized view 
+        with two new columns with the pickup and dropoff zone names (puzone, do zone)
 SQL >
 
     SELECT
@@ -192,47 +193,88 @@ DATASOURCE  nyc_taxi_zone_clean
 ## Describing and solving the main problem
 
 Now the main problem is this: we have to get the trip outliers between any two different zones. 
-For the sake of simplicity of our model i’m goint to explain what an outlier value is and how to simply detect them using simple statistical concepts like mean and standard deviation.
+For the sake of simplicity of our model I'm going to explain what an outlier value is and how to simply detect them using simple statistical concepts like the average and standard deviation. We could write a piece of python code using numpy and pandas to get a more detailed analysis as I said let's start simple.
 
-Outliers or anomalies are values that are out of the normal distribution of the dataset. Having a quick look at the dataset we can see that there are trips with different pickup and dropoff dates (> than 8h of trip in manhattan?) or a passenger_count of 9, when the average passenger is between 1 and 2. So we have detect these anomalies with a couple of easy statistical functions. The original dataset has many variables (columns) that can be studied like fare_amount but for the sake of the simplicity we’re going to work with the passenger_count and trip_distance. We can extrapolate this  model to work other variables like fare_amount.
+Outliers or anomalies are values that are out of the normal distribution of the dataset. Having a quick look at it we can see that there are trips with different pickup and dropoff dates (very long trips of > than 8h in Manhattan?) or a passenger_count of 9, when the average passenger is between 1 and 2. So we have detect these anomalies with a couple of easy statistical functions. The original dataset has many variables (columns) that can be studied like fare_amount but for the sake of the simplicity we’re going to work with trip time (difference between the pickup and dropoff times) the passenger_count and trip_distance. We can extrapolate this  model to work other variables like fare_amount.
 
 A good place to start looking for a reasonable value are the mean and we can use the standard deviation to get a range of possible values. Also with these two values we can build a score to detect if a value is within an acceptable range: The z-score 
 
-The Z-score or standar score is the number of standard deviations from the mean. In we work with the mean and standard deviation creating an upper and lower limit, our acceptable range will be one standard deviation from the mean: a z-score in the range ±1. With the z-score we can move the upper and lower bounds to get a more precise resultset of the outlier values.
+The Z-score or standar score is the number of standard deviations from the mean. In we work with the mean and standard deviation creating an upper and lower limit, our acceptable range will be one standard deviation from the mean: a z-score in the range ±1. With the z-score we can move the upper and lower bounds to get a more precise results for the outlier values.
 
 The model for the passenger_count variable:
 
-(passenger_count  - passenger_series_avg) / passenger_series_stddev AS passenger_zscore
+**(passenger_count  - passenger_series_avg) / passenger_series_stddev AS passenger_zscore**
 
-So we can calculate the mean and standard deviation of the dataset for the passenger_count and trip_distance variables with a query to the materialized view:
+So we can calculate the mean and standard deviation of the dataset for the passenger_count, trip_distance (miles) and trip_time (minutes using the function dateDiff) variables with a query to the materialized view:
 ```sql
-SELECT avg(passenger_count) AS passenger_series_avg, stddevPop(passenger_count) as passenger_series_stddev FROM nyc_taxi_zone_clean.
+SELECT 
+        avg(passenger_count) AS avg_passenger, 
+        avg(trip_distance) AS avg_distance,
+        avg(dateDiff('minute',pickup_datetime,dropoff_datetime)) AS avg_time, 
+        stddevPop(passenger_count) AS std_passenger, 
+        stddevPop(trip_distance) AS std_distance,
+        stddevPop(dateDiff('minute',pickup_datetime,dropoff_datetime)) AS std_time
+FROM nyc_taxi_zone_clean
+
+------------------------------------------
+avg_passenger: 1.5756512724734397
+avg_distance: 3.0367553475515585
+avg_time: 17.780161769434212
+std_passenger: 1.2302451685284468 
+std_distance: 3.8699927
+std_time: 73.32320011058835
+------------------------------------------
 ```
 
-We can query the avobe materialized view in our pipe to generate the z-scores for the passenger_count and trip_distance:
+The query above returns the avg and std values of the three different variables we're going to study (trip_time, passenger_count, trip_distance). In order to test our model we’re going to calculate the z-score manually because we will have to adjust the acceptable range for the outliers. The query above will be a node of our pipe named *calculate_avg_std*. 
+
+As avg and std are aggregated values from the 3 variables we could use an array to store the values and automate the generation. Also this would be simple with a recursive CTE but clickhouse supports recursive CTEs partially so I have to look for another way to do this. Of course querying directly the endpoint with a Python script would be another way to solve this. 
 
 ```sql
 SELECT pickup_datetime, 
-        dropoff_datetime, 
+        dropoff_datetime,
+        dateDiff('minute', pickup_datetime, dropoff_datetime) AS trip_time,
+        trip_time - 17.780161769434212 / 73.32320011058835 as z_time,
         passenger_count, 
         passenger_count - 1.5756512724734397 / 1.2302451685284468 as z_passenger, 
         trip_distance,
         trip_distance - 3.0367553475515594 / 3.8700316 as z_trip
 FROM nyc_taxi_zone_clean
 ```
+The query above is the node name *calculate_z_scores*
 
-In order to test our model we’re going to calculate the z-score manually because we will have to adjust the acceptable range for the outliers. The above node of our pipe will be named calculate_z_scores: 
+### Trip Time variable study
 
-Now to start with a range of ±1 of the std:
+As we see in the avg and std values of the series, the average time for a trip between zones is 17 minutes with a deviation of 73 minutes, so we can start with the lower limit at 0 and the upper one at 120.
 
 ```sql
-SELECT *,
-  z_passenger NOT BETWEEN -1 AND 1 AS is_outlier
+SELECT pickup_datetime,
+      dropoff_datetime,
+      puzone,
+      dozone,
+      trip_time,
+      z_time NOT BETWEEN 0 AND 120 AS is_outlier
+FROM calculate_z_scores
+```
+The results are promising: the lower limit is for trips of 0 minutes that can be considered as outliers. Probably 1 minute trips could not be considered outliers because they probably occur during rush hours and the passenger decided on his own to dropoff.
+Looking at the values we can see that there are 70+ trips to Airports and other zones so the upper bound could be 120 minutes. If we do that some strange trips appear but still we can raise the limit to 120 if we want.
+
+### Passenger count variable study
+Now to start with a range of ±1 of the std :
+
+```sql
+SELECT pickup_datetime, 
+        dropoff_datetime, 
+        puzone,
+        dozone,
+        passenger_count,
+        z_passenger NOT BETWEEN -1 AND 1 AS is_outlier
 FROM calculate_z_scores
 ```
 
 With this range we get outliers for 3+ more passengers and less than 1, something not very accurate. If we bump the upper limit to 3 we begin to get more accurate results taking into account that supposedly the yellow cabs cannot ride with more than 4 passengers.
-So finally the query that gives us us the outliers between different zones for the variable passenger_count is:
+So finally the query that gives us the outliers between different zones for the variable passenger_count is:
+
 ```sql
 SELECT pickup_datetime, 
         dropoff_datetime, 
@@ -243,7 +285,7 @@ SELECT pickup_datetime,
 FROM calculate_z_scores
 WHERE z_passenger NOT BETWEEN -1 AND 3.5
 ```
-
+### Trip distance variable study
 We can get to the next and last variable of our problem that is the trip_distance.
 
 As we can see the average of trip_distance is 3 miles with a deviation of 3.8 miles. That is where most of the distribution values are ranged. Again let’s start with the ±1 of the std:
@@ -271,4 +313,4 @@ WHERE z_trip NOT BETWEEN -1 and 7
 
 ## Improvements
 
-There is always room for improvements. I would like to automate the calculation of the standard deviation and average of the series for the trip_distance and passenger_count variables. For this we have to publish and endpoint for the materialized view and query the date from a python script that I would have to write.
+There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. For this we have to publish and endpoint for the materialized view and query the data from a python script that I would have to write. Also as stated earlier maybe with some array aggregate functions I could solve the automation, but still because of the simplicity of the model, we would need a human to calculate the lower and upper bounds of the distribution. 
