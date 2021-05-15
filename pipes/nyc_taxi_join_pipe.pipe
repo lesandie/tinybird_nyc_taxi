@@ -1,0 +1,24 @@
+NODE join_different_zones_2019
+SQL >
+        SELECT      
+            tpep_pickup_datetime,
+            tpep_dropoff_datetime,
+            pulocationid,
+            dolocationid,
+            passenger_count,
+            trip_distance,
+            ratecodeid,
+            payment_type,
+            fare_amount,
+            extra,
+            mta_tax,
+            tip_amount,
+            tolls_amount,
+            total_amount
+        FROM yellow_tripdata_2019_q1 
+        WHERE pulocationid != dolocationid AND 
+            toYear(tpep_pickup_datetime) = 2019 AND 
+            toYear(tpep_dropoff_datetime) = 2019
+
+TYPE materialized
+DATASOURCE  nyc_taxi_join

@@ -21,5 +21,28 @@ SQL >
     JOIN taxi_zone_lookup tzu ON ytp.pulocationid = tzu.locationid
     JOIN taxi_zone_lookup tzo ON ytp.dolocationid = tzo.locationid
 
+NODE different_zones_2019
+SQL >
+    SELECT pickup_datetime,
+            dropoff_datetime,
+            pulocationid,
+            dolocationid,
+            puzone,
+            dozone,
+            passenger_count,
+            trip_distance,
+            ratecodeid,
+            payment_type,
+            fare_amount,
+            extra,
+            mta_tax,
+            tip_amount,
+            tolls_amount,
+            total_amount
+    FROM select_zone_name 
+    WHERE pulocationid != dolocationid AND 
+            toYear(pickup_datetime) = 2019 AND 
+            toYear(dropoff_datetime) = 2019
+
 TYPE materialized
-DATASOURCE  mat_view_zones
+DATASOURCE  nyc_taxi_zone_clean
