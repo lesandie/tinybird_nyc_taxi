@@ -244,7 +244,7 @@ std_time: 73.32320011058835
 
 The query above returns the avg and std values of the three different variables we're going to study (trip_time, passenger_count, trip_distance). In order to test our model we’re going to calculate the z-score manually because we will have to adjust the acceptable range for the outliers. The query above will be a node of our pipe named *calculate_avg_std*. 
 
-As avg and std are aggregated values from the 3 variable series we could use an array to store the values and automate the generation. Also this would be simple with a recursive CTE but clickhouse supports recursive CTEs partially so I have to look for another way to do this. Of course querying directly the endpoint with a Python script would be another way to solve this.
+As avg and std are aggregated values from the 3 variable series we could use a CTE, subquery or a function to automate the calculus of the z-score for each trip. Of course querying directly the endpoint with a Python script would be another way to solve this.
 
 The next query is the node name *calculate_z_scores* using the data obtained in the *calculate_avg_std* node:
 
@@ -330,5 +330,5 @@ WHERE z_trip NOT BETWEEN -1 and 7
 
 ## Improvements
 
-There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be with a CTE or some array aggregate functions but I have to read a little bit more about both options in the ClickHouse documentation. 
+There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be with a CTE or a function but I have to read a little bit more about both options in the ClickHouse documentation. 
 Another way would be publishing and endpoint for the materialized view and query the data from a python script that I would happily write :-D when **I have more time**. But still because of the simplicity of the model, we would need a human operator to calculate the lower and upper bounds of the distribution.
