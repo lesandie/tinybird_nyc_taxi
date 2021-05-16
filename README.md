@@ -1,7 +1,9 @@
-# NYC Yellow taxi problem
+# Yet another NYC Yellow taxi dataset problem
 
 
 ## Problem Context
+
+Using NYC “Yellow Taxi” Trips Data 2019 together with data about the different zones, calculate the hour of the day where trips between any two given zones are outliers. The result should be the hours and the zones (by name).
 
 The data consists of a set of CSV files with yellow taxi trip records. The TLC Authority web provides a brief description of the dataset:
 “Records include fields capturing pick-up and drop-off dates/times, pick-up and drop-off locations, trip distances, itemized fares, rate types, payment types, and driver-reported passenger counts. The records were collected and provided to the NYC Taxi and Limousine Commission (TLC) by technology service providers. The trip data was not created by the TLC, and TLC cannot guarantee their accuracy.“
