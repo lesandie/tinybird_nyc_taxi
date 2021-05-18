@@ -247,8 +247,9 @@ std_time: 73.32320011058835
 The query above returns the avg and std values of the three different variables we're going to study (trip_time, passenger_count, trip_distance). In order to test our model we’re going to calculate the z-score manually because we will have to adjust the acceptable range for the outliers. The query above will be a node of our pipe named *calculate_avg_std*. 
 
 As avg and std are aggregated values from the 3 variable series we could use a CTE, subquery or a function to automate the calculus of the z-score for each trip. Of course querying directly the endpoint with a Python script would be another way to solve this.
-**UPDATE 18-05-2021** 
-After giving it some thoughts and reading the ClickHouse documentation, I think there is a fairly easy solution to automate the z-score calculus. USing the AggregatingMergeTree Engine and the AggregateFuntion(). I'll give it a try.
+
+**UPDATE 18-05-2021**: 
+*After giving it some thoughts and reading the ClickHouse documentation, I think there is a fairly easy solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFuntion()```*.I'll give it a try.*
 
 The next query is the node name *calculate_z_scores* using the data obtained in the *calculate_avg_std* node:
 
