@@ -249,7 +249,7 @@ The query above returns the avg and std values of the three different variables 
 As avg and std are aggregated values from the 3 variable series we could use a CTE, subquery or a function to automate the calculus of the z-score for each trip. Of course querying directly the endpoint with a Python script would be another way to solve this.
 
 **UPDATE 18-05-2021**: 
-*After giving it some thoughts and reading the ClickHouse documentation, I think there is a fairly easy solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFuntion()```*.I'll give it a try.*
+*After giving it some thoughts and reading the ClickHouse documentation, I think there is a possible solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFuntion()```*.I'll give it a try.*
 
 The next query is the node name *calculate_z_scores* using the data obtained in the *calculate_avg_std* node:
 
@@ -321,7 +321,7 @@ SELECT pickup_datetime,
 FROM calculate_z_scores
 ```
 
-We get lots of outliers because the upper limit is very low. Taking into account that a trip from the upper east side to JFK or Laguardia Airport are 15+ miles, we should not discard this trips because there are meny of them. So raising the upper limit to 7 or 8 should do the trick and we can have a pretty solid outlier list with this rage:
+We get lots of outliers because the upper limit is very low. Taking into account that a trip from the upper east side to JFK or Laguardia Airport are 15+ miles, we should not discard this trips because there are mny of them. So raising the upper limit to 7 or 8 should do the trick and we can have a pretty solid outlier list with this rage:
 ```sql
 SELECT pickup_datetime,
       dropoff_datetime,
