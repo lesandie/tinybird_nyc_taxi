@@ -335,5 +335,5 @@ WHERE z_trip NOT BETWEEN -1 and 7
 
 ## Improvements
 
-There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be with a CTE or a function but I have to read a little bit more about both options in the ClickHouse documentation. 
+There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be with a CTE but I have to read a little bit more the ClickHouse documentation. 
 Another way would be publishing and endpoint for the materialized view and query the data from a python script that I would happily write :-D when **I have more time**. But still because of the simplicity of the model, we would need a human operator to calculate the lower and upper bounds of the distribution.
