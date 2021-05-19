@@ -1,0 +1,17 @@
+SCHEMA >
+    `pickup_datetime` DateTime,
+    `dropoff_datetime` DateTime,
+    `puzone` String,
+    `dozone` String,
+    `trip_time` Int64,
+    `passenger_count` Int16,
+    `trip_distance` Float64,
+    `avg_time` AggregateFunction(avg, Float64),
+    `avg_passenger` AggregateFunction(avg, Float64),
+    `avg_distance` AggregateFunction(avg, Float64),
+    `std_time` AggregateFunction(stddevPop, Float64),
+    `std_passenger` AggregateFunction(stddevPop, Float64),
+    `std_distance` AggregateFunction(stddevPop, Float64),
+
+ENGINE "AggregatingMergeTree"
+ENGINE_SORTING_KEY "pickup_datetime, dropoff_datetime, trip_time, passenger_count, trip_distance"

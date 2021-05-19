@@ -6,7 +6,7 @@
 Using NYC “Yellow Taxi” Trips Data 2019 together with data about the different zones, calculate the hour of the day where trips between any two given zones are outliers. The result should be the hours and the zones (by name).
 
 The data consists of a set of CSV files with yellow taxi trip records. The TLC Authority web provides a brief description of the dataset:
-“Records include fields capturing pick-up and drop-off dates/times, pick-up and drop-off locations, trip distances, itemized fares, rate types, payment types, and driver-reported passenger counts. The records were collected and provided to the NYC Taxi and Limousine Commission (TLC) by technology service providers. The trip data was not created by the TLC, and TLC cannot guarantee their accuracy.“
+*“Records include fields capturing pick-up and drop-off dates/times, pick-up and drop-off locations, trip distances, itemized fares, rate types, payment types, and driver-reported passenger counts. The records were collected and provided to the NYC Taxi and Limousine Commission (TLC) by technology service providers. The trip data was not created by the TLC, and TLC cannot guarantee their accuracy.“*
 
 The last part about the accuracy is very true. For the 2019’s dataset I found different dates from other years that 2019. So following some best practices we should “clean” the dataset before starting our work and thus we reduce the number of outliers cleaning beforehand.
  
@@ -210,7 +210,7 @@ DATASOURCE  nyc_taxi_zone_clean
 ## Describing and solving the main problem
 
 Now the main problem is this: we have to get the trip outliers between any two different zones. 
-For the sake of simplicity of our model I'm going to explain what an outlier value is and how to simply detect them using simple statistical concepts like the average and standard deviation. We could write a piece of python code using numpy and pandas to get a more detailed analysis but as I said, let's start simple.
+For the sake of simplicity of our model I'm going to explain what an outlier value is and how to simply detect them using simple statistical concepts like the average and standard deviation. We could write a piece of python code using numpy or pandas to get a more detailed analysis but as I said, let's start simple.
 
 Outliers or anomalies are values that are out of the normal distribution of the dataset. Having a quick look at it we can see that there are trips with different pickup and dropoff dates (very long trips of > than 8h in Manhattan?) or a passenger_count of 9, when the average passenger is between 1 and 2. So we have detect these anomalies with a couple of easy statistical functions. The original dataset has many variables (columns) that can be studied like fare_amount but for the sake of the simplicity we’re going to work with trip time (difference between the pickup and dropoff times) the passenger_count and trip_distance. We can extrapolate this model to work other variables like fare_amount.
 
@@ -246,10 +246,10 @@ std_time: 73.32320011058835
 
 The query above returns the avg and std values of the three different variables we're going to study (trip_time, passenger_count, trip_distance). In order to test our model we’re going to calculate the z-score manually because we will have to adjust the acceptable range for the outliers. The query above will be a node of our pipe named *calculate_avg_std*. 
 
-As avg and std are aggregated values from the 3 variable series we could use a CTE, subquery or a function to automate the calculus of the z-score for each trip. Of course querying directly the endpoint with a Python script would be another way to solve this.
+As avg and std are aggregated values from the 3 variable series, probably we could use a CTE, subquery ~~or a function~~ (UDF not supported ClickHouse) to automate the calculus of the z-score for each trip. Of course querying directly the endpoint with a Python script would be the easiest solution.
 
 **UPDATE 18-05-2021**: 
-*After giving it some thoughts and reading the ClickHouse documentation, I think there is a possible solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFuntion()```*.I'll give it a try.*
+*After giving it some thoughts and reading the ClickHouse/Tinybird documentation, I think there is a possible solution (long shot but..)to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```*.I'll give it a try. Still the posibility of the Python script is there*.
 
 The next query is the node name *calculate_z_scores* using the data obtained in the *calculate_avg_std* node:
 
@@ -279,7 +279,7 @@ SELECT pickup_datetime,
 FROM calculate_z_scores
 ```
 The results are promising: the lower limit is for trips of 0 minutes that can be considered as outliers. Probably 1 minute trips could not be considered outliers because they probably occur during rush hours and the passenger decided on his own to dropoff.
-Looking at the values we can see that there are 70+ trips to Airports and other zones so the upper bound could be 120 minutes. If we do that some strange trips appear but still we can raise the limit to 120 if we want.
+Looking at the values we can see that there are 70+ trips to Airports and other zones so the upper bound could be 120 minutes. If we do that some strange trips appear but still we can raise the limit if we want.
 
 ### Passenger count variable study
 Now to start with a range of ±1 of the std :

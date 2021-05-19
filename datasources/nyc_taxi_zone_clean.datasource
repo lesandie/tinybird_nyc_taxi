@@ -5,6 +5,7 @@ SCHEMA >
     `dolocationid` Int32,
     `puzone` String,
     `dozone` String,
+    `trip_time` Int64,
     `passenger_count` Int16,
     `trip_distance` Float32,
     `ratecodeid` Int16,
