@@ -20,6 +20,9 @@ After that, we can see that we have to work with some Datetime types from the pi
 
 If we inspect the new table with the zone names we can see that, we indeed need to join both datasets to get the zone name, as stated in the description above. 
 
+**UPDATE 21-05-2021**: 
+*Another added problem/feature that I'll be adding as a new section is: How would you manage to solve the same problem but with the added complexity of data streaming: Instead of loading the CSV, just imagine that you have a continuos stream of data and you have to detect the outliers as the data is arriving*
+
 ## Using the tinybird platform to get the solution
 So as we are going to use Tinybird as our analytics platform we need to create a couple of datasources, using the cli tool, one for the main yellow taxi trips and another for the zone name matching.
 
@@ -333,7 +336,11 @@ FROM calculate_z_scores
 WHERE z_trip NOT BETWEEN -1 and 7
 ```
 
+## Added complexity: Data Stream
+-- On Work --
+
+
 ## Improvements
 
 There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be with a CTE but I have to read a little bit more the ClickHouse documentation. 
-Another way would be publishing and endpoint for the materialized view and query the data from a python script that I would happily write :-D when **I have more time**. But still because of the simplicity of the model, we would need a human operator to calculate the lower and upper bounds of the distribution.
+Another way would be publishing and endpoint for the materialized view and query the data from a python script that I would happily write :-D when **I have more time (working on it)**. But still because of the simplicity of the model, we would need a human operator to calculate the lower and upper bounds of the distribution.
