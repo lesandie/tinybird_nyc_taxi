@@ -16,7 +16,7 @@ https://www1.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yello
 
 After that, we can see that we have to work with some Datetime types from the pickup and dropoff columns. Also other important properties for our problem are the PuLocationID and the DoLocationID as they are ids and we need to get the zone name (text) for our study results. The zone name is not in the dataset, and we have to get it from another descriptive dataset as stated in the TLC Authority website: 
 
-*“PULocationid & DOLocationID—matching zone numbers to the map Each of the trip records contains a field corresponding to the location of the pickup or drop-off of the trip (or in FHV records before 2017, just the pickup), populated by numbers ranging from 1-263. These numbers correspond to taxi zones, which may be downloaded as a table or map/shapefile and matched to the trip records using a join. The data is currently available on the Open Data Portal at: https://data.cityofnewyork.us/Transportation/NYC-Taxi-Zones/d3c5-ddgc”*
+*“PULocationid & DOLocationID matching zone numbers to the map Each of the trip records contains a field corresponding to the location of the pickup or drop-off of the trip (or in FHV records before 2017, just the pickup), populated by numbers ranging from 1-263. These numbers correspond to taxi zones, which may be downloaded as a table or map/shapefile and matched to the trip records using a join. The data is currently available on the Open Data Portal at: https://data.cityofnewyork.us/Transportation/NYC-Taxi-Zones/d3c5-ddgc”*
 
 If we inspect the new table with the zone names we can see that, we indeed need to join both datasets to get the zone name, as stated in the description above. 
 
@@ -249,7 +249,7 @@ The query above returns the avg and std values of the three different variables 
 As avg and std are aggregated values from the 3 variable series, probably we could use a CTE, subquery ~~or a function~~ (UDF not supported ClickHouse) to automate the calculus of the z-score for each trip. Of course querying directly the endpoint with a Python script would be the easiest solution.
 
 **UPDATE 18-05-2021**: 
-*After giving it some thoughts and reading the ClickHouse/Tinybird documentation, I think there is a possible solution (long shot but..)to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```*.I'll give it a try. Still the posibility of the Python script is there*.
+*After giving it some thoughts and reading the ClickHouse/Tinybird documentation, I think there is a possible solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```*.I'll give it a try. Still the possibility of the Python script is there*.
 
 The next query is the node name *calculate_z_scores* using the data obtained in the *calculate_avg_std* node:
 
