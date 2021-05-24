@@ -20,10 +20,7 @@ After that, we can see that we have to work with some Datetime types from the pi
 
 If we inspect the new table with the zone names we can see that, we indeed need to join both datasets to get the zone name, as stated in the description above. 
 
-**UPDATE 21-05-2021**: 
-*Another added problem/feature that I'll be adding as a new section is: How would you manage to solve the same problem but with the added complexity of data streaming: Instead of loading the CSV, just imagine that you have a continuos stream of data and you have to detect the outliers as the data is arriving*
-
-## Using the tinybird platform to get the solution
+## Using the [Tinybird](https://tinybird.co) platform to get the solution
 So as we are going to use Tinybird as our analytics platform we need to create a couple of datasources, using the cli tool, one for the main yellow taxi trips and another for the zone name matching.
 
 It is advisable to check the Cli tool tutorial at https://docs.tinybird.co/cli.html
@@ -252,7 +249,7 @@ The query above returns the avg and std values of the three different variables 
 As avg and std are aggregated values from the 3 variable series, probably we could use a CTE, subquery ~~or a function~~ (UDF not supported ClickHouse) to automate the calculus of the z-score for each trip. Of course querying directly the endpoint with a Python script would be the easiest solution.
 
 **UPDATE 18-05-2021**: 
-*After giving it some thoughts and reading the ClickHouse/Tinybird documentation, I think there is a possible solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```*.I'll give it a try. Still the possibility of the Python script is there*.
+*After giving it some thoughts and reading the ClickHouse/Tinybird documentation, I think there is a possible solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```*. I'll give it a try. Still the possibility of the Python script is there*.
 
 The next query is the node name *calculate_z_scores* using the data obtained in the *calculate_avg_std* node:
 
@@ -267,6 +264,28 @@ SELECT pickup_datetime,
         trip_distance - 3.0367553475515594 / 3.8700316 as z_trip
 FROM nyc_taxi_zone_clean
 ```
+So if we want to use Python to query the data via [Tinybird's query API](https://docs.tinybird.co/api-reference/query-api.html) we only have to publish the node *calculate_z_scores* as an API endpoint and use the generated token like this:
+
+```python
+import requests
+import pandas as pd
+
+# Token anonymized
+params = {
+    'token': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    'q':'SELECT pickup_datetime, dropoff_datetime, puzone, dozone, trip_time, passenger_count, trip_distance FROM nyc_taxi_zone_clean_pipe LIMIT 1000'
+}
+
+url = 'https://api.tinybird.co/v0/pipes/nyc_taxi_zone_clean_pipe.json'
+
+response = requests.get(url, params=params, stream=True)
+stream = response.json()
+print(stream.keys())
+````
+This is something I'll develop in another section when I have time.
+
+Let's continue using Tinybird's UI.
+
 
 ### Trip Time variable study
 
@@ -336,11 +355,13 @@ FROM calculate_z_scores
 WHERE z_trip NOT BETWEEN -1 and 7
 ```
 
-## Added complexity: Data Stream
--- On Work --
+## Improvements and added complexity: Data Stream
 
+There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be as described above using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```*. I'll give it a try. 
 
-## Improvements
-
-There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be with a CTE but I have to read a little bit more the ClickHouse documentation. 
 Another way would be publishing and endpoint for the materialized view and query the data from a python script that I would happily write :-D when **I have more time (working on it)**. But still because of the simplicity of the model, we would need a human operator to calculate the lower and upper bounds of the distribution.
+
+**UPDATE 21-05-2021**: 
+*Another added problem/feature that I'll be adding is: How would you manage to solve the same problem but with the added complexity of data streaming: Instead of loading the CSV, just imagine that you have a continuos stream of data and you have to detect the outliers as the data is arriving*
+
+
