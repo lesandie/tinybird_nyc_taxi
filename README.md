@@ -273,7 +273,7 @@ import pandas as pd
 # Token anonymized
 params = {
     'token': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    'q':'SELECT pickup_datetime, dropoff_datetime, puzone, dozone, trip_time, passenger_count, trip_distance FROM nyc_taxi_zone_clean_pipe LIMIT 1000'
+    'q':'SELECT pickup_datetime, dropoff_datetime, puzone, dozone, trip_time, passenger_count, trip_distance FROM calculate_z_scores LIMIT 1000'
 }
 
 url = 'https://api.tinybird.co/v0/pipes/nyc_taxi_zone_clean_pipe.json'

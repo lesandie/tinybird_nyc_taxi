@@ -12,8 +12,3 @@ url = 'https://api.tinybird.co/v0/pipes/nyc_taxi_zone_clean_pipe.json'
 response = requests.get(url, params=params, stream=True)
 stream = response.json()
 print(stream.keys())
-#print(response.json()['data'])
-#df = pd.DataFrame.from_dict(r, orient="index")
-#df = pd.DataFrame(response.json())
-#df.to_json()
-#print(df.describe())
