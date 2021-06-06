@@ -18,6 +18,7 @@ result = response.json()
 #print(result.keys())
 #print(result.values())
 #result = {result['data']:item for item in data}
+# Now we assign the avg and std for each variable as the dynamic query parameters
 params = {
     'token': '.eyJ1IjogImYxNDQzM2QxLWJhZWEtNGM5MC04ZDc1LWIxNmJiZDBkM2NjZSIsICJpZCI6ICI2NGRlZmY5Mi0xMDcyLTQ3MDYtOTQ0My02ODM1ZjE0NDE1ZGYifQ.ANDdHelFCeqlBZO9lmVxeSjrGBbW2y1ZFMVHBfEht44',
     'avg_time': result['data'][0]['avg_time'],
@@ -28,6 +29,7 @@ params = {
     'std_distance': result['data'][0]['std_distance']
 }
 
+# Execute the node query. Check for the query at the UPDATED 06/06/2021 section in the README
 response = requests.get(url, params=params)
 final_result = response.json()
 print(final_result['data'])
