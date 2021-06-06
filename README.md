@@ -251,6 +251,28 @@ As avg and std are aggregated values from the 3 variable series, probably we cou
 **UPDATE 18-05-2021**: 
 *After giving it some thoughts and reading the ClickHouse/Tinybird documentation, I think there is a possible solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```*. I'll give it a try. Still the possibility of the Python script is there*.
 
+**UPDATE 06/06/2021**:
+The Python script is ready in the misc directory. Check out the repo. I've used parameters to make the queries dynamic.
+More info at [Tinybird's query parameters](https://docs.tinybird.co/query-parameters.html)
+
+The node query looks like this:
+```sql
+%
+SELECT pickup_datetime, 
+        dropoff_datetime,
+        puzone,
+        dozone,
+        dateDiff('minute', pickup_datetime, dropoff_datetime) AS trip_time,
+        trip_time - {{Float64(avg_time, 0)}} / {{Float64(std_time, 0)}} AS z_time,
+        passenger_count, 
+        passenger_count - {{Float64(avg_passenger, 0)}} / {{Float64(std_passenger, 0)}} AS z_passenger, 
+        trip_distance,
+        trip_distance - {{Float64(avg_distance, 0)}} / {{Float64(std_distance, 0)}} AS z_trip
+FROM nyc_taxi_zone_clean LIMIT 10000
+```
+When there are no parameters, the query defaults to 0 and the returned scores are null (captain obvious but...)
+
+
 The next query is the node name *calculate_z_scores* using the data obtained in the *calculate_avg_std* node:
 
 ```sql
@@ -276,13 +298,13 @@ params = {
     'q':'SELECT pickup_datetime, dropoff_datetime, puzone, dozone, trip_time, passenger_count, trip_distance FROM calculate_z_scores LIMIT 1000'
 }
 
-url = 'https://api.tinybird.co/v0/pipes/nyc_taxi_zone_clean_pipe.json'
+url = f'https://api.tinybird.co/v0/pipes/nyc_taxi_zone_clean_pipe.json'
 
-response = requests.get(url, params=params, stream=True)
+response = requests.get(url, params=params)
 stream = response.json()
 print(stream.keys())
-````
-This is something I'll develop in another section when I have time.
+```
+This piece of code is in the misc directory: calculate_zscore_dynamically. Check the repo.
 
 Let's continue using Tinybird's UI.
 
