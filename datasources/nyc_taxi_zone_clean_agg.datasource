@@ -14,4 +14,4 @@ SCHEMA >
     `std_distance` AggregateFunction(stddevPop, Float64),
 
 ENGINE "AggregatingMergeTree"
-ENGINE_SORTING_KEY "pickup_datetime, dropoff_datetime, puzone, dozone"
+ENGINE_SORTING_KEY "pickup_datetime"

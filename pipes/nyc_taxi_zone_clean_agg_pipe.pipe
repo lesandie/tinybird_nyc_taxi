@@ -25,9 +25,9 @@ SQL>
             dropoff_datetime,
             puzone,
             dozone,
-            trip_time - avgMerge(trip_time) / stddevPopMerge(trip_time) AS z_time,
-            passenger_count - avgMerge(passenger_count) / stddevPopMerge(passenger_count) as z_passenger,
-            trip_distance - avgMerge(trip_distance) / stddevPopMerge(trip_distance) as z_distance
+            trip_time - avgMerge(avg_time) / stddevPopMerge(std_time) AS z_time,
+            passenger_count - avgMerge(avg_passenger) / stddevPopMerge(std_passenger) as z_passenger,
+            trip_distance - avgMerge(avg_distance) / stddevPopMerge(std_distance) as z_distance
     FROM nyc_taxi_zone_clean_agg 
     GROUP BY pickup_datetime, dropoff_datetime, puzone, dozone
 
