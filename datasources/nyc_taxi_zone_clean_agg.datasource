@@ -1,3 +1,4 @@
+# En las funciones AggregateFunction hay que pasarme la funcion y el tipo de la columna, no el valor que devuelve.
 SCHEMA >
     `pickup_datetime` DateTime,
     `dropoff_datetime` DateTime,
@@ -5,13 +6,13 @@ SCHEMA >
     `dozone` String,
     `trip_time` Int64,
     `passenger_count` Int16,
-    `trip_distance` Float64,
-    `avg_time` AggregateFunction(avg, Float64),
-    `avg_passenger` AggregateFunction(avg, Float64),
-    `avg_distance` AggregateFunction(avg, Float64),
-    `std_time` AggregateFunction(stddevPop, Float64),
-    `std_passenger` AggregateFunction(stddevPop, Float64),
-    `std_distance` AggregateFunction(stddevPop, Float64),
+    `trip_distance` Float32,
+    `avg_time` AggregateFunction(avg, Int64),
+    `avg_passenger` AggregateFunction(avg, Int16),
+    `avg_distance` AggregateFunction(avg, Float32),
+    `std_time` AggregateFunction(stddevPop, Int64),
+    `std_passenger` AggregateFunction(stddevPop, Int16),
+    `std_distance` AggregateFunction(stddevPop, Float32)
 
 ENGINE "AggregatingMergeTree"
-ENGINE_SORTING_KEY "pickup_datetime"
+ENGINE_SORTING_KEY "pickup_datetime, dropoff_datetime, puzone, dozone, trip_time, passenger_count, trip_distance"

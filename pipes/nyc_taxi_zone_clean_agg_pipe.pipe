@@ -10,10 +10,10 @@ SQL >
             avgState(trip_time) AS avg_time, 
             avgState(passenger_count) AS avg_passenger, 
             avgState(trip_distance) AS avg_distance,
-            stddevPopState(trip_time) AS std_time
+            stddevPopState(trip_time) AS std_time,
             stddevPopState(passenger_count) AS std_passenger, 
             stddevPopState(trip_distance) AS std_distance
-    FROM taxi_zone_clean 
+    FROM nyc_taxi_zone_clean 
     GROUP BY pickup_datetime, dropoff_datetime, puzone, dozone, trip_time, passenger_count, trip_distance
 
 TYPE materialized
@@ -25,9 +25,12 @@ SQL>
             dropoff_datetime,
             puzone,
             dozone,
+            trip_time,
+            passenger_count,
+            trip_distance,
             trip_time - avgMerge(avg_time) / stddevPopMerge(std_time) AS z_time,
             passenger_count - avgMerge(avg_passenger) / stddevPopMerge(std_passenger) as z_passenger,
             trip_distance - avgMerge(avg_distance) / stddevPopMerge(std_distance) as z_distance
     FROM nyc_taxi_zone_clean_agg 
-    GROUP BY pickup_datetime, dropoff_datetime, puzone, dozone
+    GROUP BY pickup_datetime, dropoff_datetime, puzone, dozone, trip_time, passenger_count, trip_distance
 
