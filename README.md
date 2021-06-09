@@ -250,7 +250,7 @@ The query above returns the avg and std values of the three different variables 
 As avg and std are aggregated values from the 3 variable series, probably we could use a CTE, subquery ~~or a function~~ (UDF not supported ClickHouse) to automate the calculus of the z-score for each trip. Of course querying directly the endpoint with a Python script would be the easiest solution.
 
 **UPDATE 18/05/2021**: 
-*After giving it some thoughts and reading the ClickHouse/Tinybird documentation, I think there is a possible solution to automate the z-score calculus, using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```* with a CTE. I'll give it a try. Still the possibility of the Python script is there*.
+*After giving it some thoughts and reading the ClickHouse/Tinybird documentation, I think there is a possible solution to automate the z-score calculus, using the ``` AggregatingMergeTree``` Engine and the ```AggregateFunction()``` with a CTE. I'll give it a try. Still the possibility of the Python script is there*.
 
 **UPDATE 06/06/2021**:
 Finished the Python script and is ready in the misc directory. Check out the repo. I've used parameters to make the queries dynamic.
@@ -269,7 +269,7 @@ SELECT pickup_datetime,
         passenger_count - {{Float64(avg_passenger, 0)}} / {{Float64(std_passenger, 0)}} AS z_passenger, 
         trip_distance,
         trip_distance - {{Float64(avg_distance, 0)}} / {{Float64(std_distance, 0)}} AS z_trip
-FROM nyc_taxi_zone_clean LIMIT 10000
+FROM nyc_taxi_zone_clean LIMIT 100000
 ```
 When no parameters are passed, the query defaults to 0 and the returned scores are null (captain obvious but...)
 
@@ -300,7 +300,7 @@ The next query is the node name *calculate_z_scores* using the data obtained in 
 ```sql
 SELECT pickup_datetime, 
         dropoff_datetime,
-        dateDiff('minute', pickup_datetime, dropoff_datetime) AS trip_time,
+        trip_time,
         trip_time - 17.780161769434212 / 73.32320011058835 as z_time,
         passenger_count, 
         passenger_count - 1.5756512724734397 / 1.2302451685284468 as z_passenger, 
@@ -403,7 +403,7 @@ WHERE z_trip NOT BETWEEN -1 and 7
 
 ## Improvements and added complexity: Data Stream
 
-There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be as described above using the* ``` AggregatingMergeTree``` *Engine and the* ```AggregateFunction()```* and a CTE. 
+There is always room for improvements. For the next iteration in the process, I would like to automate the calculation of the standard deviation and average of the series for the trip time, trip distance and passenger count variables. One way of doing this would be as described above using the ``` AggregatingMergeTree``` Engine and the ```AggregateFunction()``` and a CTE. 
 
 Another way would be publishing and endpoint for the materialized view and query the data from a python script that I wrote. check the misc directory. But still because of the simplicity of the model, we would need a human operator to calculate the lower and upper bounds of the distribution.
 
