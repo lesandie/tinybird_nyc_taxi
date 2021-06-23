@@ -1,3 +1,24 @@
+NODE clean_different_zones_only_2019
+SQL >
+    SELECT  tpep_pickup_datetime,
+            tpep_dropoff_datetime,
+            pulocationid,
+            dolocationid,
+            passenger_count,
+            trip_distance,
+            ratecodeid,
+            payment_type,
+            fare_amount,
+            extra,
+            mta_tax,
+            tip_amount,
+            tolls_amount,
+            total_amount
+    FROM yellow_tripdata_2019_q1 
+    WHERE pulocationid != dolocationid AND 
+            toYear(tpep_pickup_datetime) = 2019 AND 
+            toYear(tpep_dropoff_datetime) = 2019
+
 NODE select_zone_name
 SQL >
     SELECT
@@ -18,33 +39,9 @@ SQL >
         ytp.tip_amount AS tip_amount,
         ytp.tolls_amount AS tolls_amount,
         ytp.total_amount AS total_amount
-    FROM yellow_tripdata_2019_q1 ytp
+    FROM clean_different_zones_only_2019 ytp
     JOIN taxi_zone_lookup tzu ON ytp.pulocationid = tzu.locationid
     JOIN taxi_zone_lookup tzo ON ytp.dolocationid = tzo.locationid
-
-NODE different_zones_2019
-SQL >
-    SELECT pickup_datetime,
-            dropoff_datetime,
-            pulocationid,
-            dolocationid,
-            puzone,
-            dozone,
-            trip_time,
-            passenger_count,
-            trip_distance,
-            ratecodeid,
-            payment_type,
-            fare_amount,
-            extra,
-            mta_tax,
-            tip_amount,
-            tolls_amount,
-            total_amount
-    FROM select_zone_name 
-    WHERE pulocationid != dolocationid AND 
-            toYear(pickup_datetime) = 2019 AND 
-            toYear(dropoff_datetime) = 2019
 
 TYPE materialized
 DATASOURCE nyc_taxi_zone_clean
