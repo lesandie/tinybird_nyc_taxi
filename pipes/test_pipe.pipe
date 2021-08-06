@@ -1,0 +1,104 @@
+NODE yt_outliers_1
+SQL >
+
+    SELECT avg(passenger_count), stddevPop(passenger_count) as stddev, min(passenger_count) as min, max(passenger_count) as max, avg(passenger_count) - stddevSamp(passenger_count) as low, avg(passenger_count) + stddevSamp(passenger_count) as high FROM yellow_tripdata_2019_q1 WHERE pulocationid != dolocationid
+
+
+
+NODE yt_outliers_2
+SQL >
+
+    SELECT toHour(pickup_datetime) as hour,
+            toMinute(pickup_datetime) as minute,
+            toSecond(pickup_datetime) as seconds
+    FROM nyc_taxi_zone_clean
+
+
+
+NODE yt_outliers_3
+SQL >
+
+    SELECT dateDiff('minute',pickup_datetime,dropoff_datetime) AS differ FROM nyc_taxi_zone_clean
+
+
+
+NODE yt_outliers_5
+SQL >
+
+    SELECT
+            ytp.tpep_pickup_datetime AS pickup_datetime,
+            ytp.tpep_dropoff_datetime AS dropoff_datetime,
+            ytp.pulocationid,
+            ytp.dolocationid,
+            tzu.zone AS puzone,
+            tzo.zone AS dozone,
+            ytp.passenger_count,
+            ytp.trip_distance,
+            ytp.ratecodeid,
+            ytp.payment_type,
+            ytp.fare_amount,
+            ytp.extra,
+            ytp.mta_tax,
+            ytp.tip_amount,
+            ytp.tolls_amount,
+            ytp.total_amount
+        FROM yellow_tripdata_2019_q1 ytp
+        INNER JOIN taxi_zone_lookup tzu ON ytp.pulocationid = tzu.locationid
+        INNER JOIN taxi_zone_lookup tzo ON ytp.dolocationid = tzo.locationid
+
+
+
+NODE yt_outliers_6
+SQL >
+
+    WITH 
+    (
+       SELECT trip_distance AS trip FROM yt_outliers_5
+    ) AS tripdist,
+    (
+       SELECT
+           avg(trip_distance) - stddevPop(trip_distance) AS lower_bound, 
+           avg(trip_distance) + stddevPop(trip_distance) AS upper_bound
+       FROM tripdist
+    ) as bounds
+    SELECT trip,
+           trip NOT BETWEEN lower_bound AND upper_bound AS is_anomaly
+    FROM
+       tripdist,
+       bounds
+
+
+
+NODE yt_outliers_7
+SQL >
+
+    SELECT      tpep_pickup_datetime,
+                tpep_dropoff_datetime,
+                pulocationid,
+                dolocationid,
+                passenger_count,
+                trip_distance,
+                ratecodeid,
+                payment_type,
+                fare_amount,
+                extra,
+                mta_tax,
+                tip_amount,
+                tolls_amount,
+                total_amount
+        FROM yellow_tripdata_2019_q1 
+        WHERE pulocationid != dolocationid AND 
+                toYear(tpep_pickup_datetime) = 2019 AND 
+                toYear(tpep_dropoff_datetime) = 2019
+
+
+
+NODE yt_outliers_8
+SQL >
+
+    WITH 
+      (SELECT avg(trip_distance) FROM yellow_tripdata_2019_q1) AS avg_distance,
+      (SELECT stddevPop(trip_distance) FROM yellow_tripdata_2019_q1) AS std_distance
+    SELECT (trip_distance - avg_distance) / std_distance FROM yellow_tripdata_2019_q1
+
+

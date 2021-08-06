@@ -1,0 +1,106 @@
+NODE getting_started_00
+DESCRIPTION >
+    this is the first node , scroll down to understand what a node is
+
+SQL >
+
+    SELECT * from public.nyc_taxi
+
+
+
+NODE getting_started_start
+DESCRIPTION >
+    Tinybird SQL is a dialect of Clickhouse which is a dialect of standard SQL. Don't worry, there are no so many differences. You can check SQL syntax in [clickhouse documentation](https://clickhouse.yandex/docs/en/query_language/select/)
+
+SQL >
+
+    SELECT * from public.nyc_taxi
+        ORDER BY tpep_pickup_datetime
+        LIMIT 10
+
+
+
+NODE getting_started_standard_sql
+DESCRIPTION >
+    Look to the following query, it's standard SQL
+
+SQL >
+
+    SELECT * from public.nyc_taxi
+        ORDER BY tpep_pickup_datetime
+        LIMIT 10
+
+
+
+NODE getting_started_types
+DESCRIPTION >
+    Main differences in Clickhouse SQL are: Types and functions and JOINs. For example,
+
+SQL >
+
+    SELECT toInt32('3'), toDate('2019-01-01'), toDateTime('2019-01-01 10:00:00')
+
+
+
+NODE getting_started_types_arrays
+DESCRIPTION >
+    Specially [array functions](https://clickhouse.yandex/docs/en/query_language/functions/array_functions/) are very different but very powerful
+
+SQL >
+
+    SELECT [1,2,3] as arr, arrayMap(x -> x*x, arr) as map, arrayUniq([1,1,1,200]) as uniq
+
+
+
+NODE getting_started_functions
+DESCRIPTION >
+    Functions are different than in other databases, not a big deal, [the documentation](https://clickhouse.yandex/docs/en/query_language/functions/)
+        is pretty detailed. But let us show some nice features in aggregation functions. You can append `-If` in any aggregation function
+
+SQL >
+
+    select sum(number), sumIf(number, number < 5) from (select * from system.numbers LIMIT 10)
+
+
+
+NODE getting_started_functions_timing
+DESCRIPTION >
+    Time is really important (most of the biggest datasets have a time component) and there are handy functions to work it:
+
+SQL >
+
+    SELECT parseDateTimeBestEffort('2018/07/07T23:50:05') d, toDate(d) date , toStartOfMonth(d) month, toStartOfHour(d) hour, toStartOfQuarter(d) quarter
+
+
+
+NODE getting_started_pipe_time_agg
+DESCRIPTION >
+    You probably realized there each node has a name. This one is `getting_started_pipe_nodes`. You can use the previous node name in your queries. For example, let create an aggregation per month using public NYC taxi data.
+
+SQL >
+
+    SELECT toDate(tpep_pickup_datetime) date, count() pickup_number 
+        FROM public.nyc_taxi
+        GROUP by date
+
+
+
+NODE getting_started_pipe_use_previous_one
+DESCRIPTION >
+    And now you can query the previous one
+
+SQL >
+
+    SELECT * from getting_started_pipe_time_agg where date = '2017-01-14'
+
+
+
+NODE getting_started_thats_all
+DESCRIPTION >
+    This was the intro to the basics of Pipes and SQL, check [our documentation](https://docs.tinybird.co/) and clickhouse [SQL syntax](https://clickhouse.yandex/docs/en/query_language/select/)
+
+SQL >
+
+    SELECT 'thanks!'
+
+

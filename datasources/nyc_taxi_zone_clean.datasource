@@ -1,3 +1,4 @@
+
 SCHEMA >
     `pickup_datetime` DateTime,
     `dropoff_datetime` DateTime,
@@ -18,4 +19,4 @@ SCHEMA >
     `total_amount` Int32
 
 ENGINE "MergeTree"
-ENGINE_SORTING_KEY "pickup_datetime, dropoff_datetime"
+ENGINE_SORTING_KEY "pickup_datetime, dropoff_datetime, trip_time, passenger_count, trip_distance"

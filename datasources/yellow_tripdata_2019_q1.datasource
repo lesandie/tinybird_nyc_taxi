@@ -1,4 +1,3 @@
-DESCRIPTION generated from ./yellow_tripdata_2019_q1.csv
 
 SCHEMA >
     `vendorid` Int16,
@@ -19,3 +18,8 @@ SCHEMA >
     `improvement_surcharge` Float32,
     `total_amount` Float32,
     `congestion_surcharge` Nullable(String)
+
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "toYear(tpep_pickup_datetime)"
+ENGINE_SORTING_KEY "tpep_pickup_datetime, intHash32(payment_type)"
+ENGINE_SAMPLING_KEY "intHash32(payment_type)"

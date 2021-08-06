@@ -1,4 +1,4 @@
-# En las funciones AggregateFunction hay que pasarme la funcion y el tipo de la columna, no el valor que devuelve.
+
 SCHEMA >
     `pickup_datetime` DateTime,
     `dropoff_datetime` DateTime,

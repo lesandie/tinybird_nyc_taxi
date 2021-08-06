@@ -1,7 +1,11 @@
-DESCRIPTION generated from ./taxi_zone_lookup.csv
 
 SCHEMA >
     `locationid` Int32,
     `borough` String,
     `zone` String,
     `service_zone` String
+
+ENGINE "MergeTree"
+ENGINE_PARTITION_KEY "substring(toString(locationid), 1, 1)"
+ENGINE_SORTING_KEY "locationid, cityHash64(service_zone)"
+ENGINE_SAMPLING_KEY "cityHash64(service_zone)"

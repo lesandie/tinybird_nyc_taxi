@@ -1,47 +1,126 @@
-NODE clean_different_zones_only_2019
-SQL >
-    SELECT  tpep_pickup_datetime,
-            tpep_dropoff_datetime,
-            pulocationid,
-            dolocationid,
-            passenger_count,
-            trip_distance,
-            ratecodeid,
-            payment_type,
-            fare_amount,
-            extra,
-            mta_tax,
-            tip_amount,
-            tolls_amount,
-            total_amount
-    FROM yellow_tripdata_2019_q1 
-    WHERE pulocationid != dolocationid AND 
-            toYear(tpep_pickup_datetime) = 2019 AND 
-            toYear(tpep_dropoff_datetime) = 2019
-
 NODE select_zone_name
 SQL >
-    SELECT
-        ytp.tpep_pickup_datetime AS pickup_datetime,
-        ytp.tpep_dropoff_datetime AS dropoff_datetime,
-        ytp.pulocationid AS pulocationid,
-        ytp.dolocationid AS dolocationid,
-        tzu.zone AS puzone,
-        tzo.zone AS dozone,
-        dateDiff('minute',pickup_datetime,dropoff_datetime) AS trip_time,
-        ytp.passenger_count AS passenger_count,
-        ytp.trip_distance AS trip_distance,
-        ytp.ratecodeid AS ratecodeid,
-        ytp.payment_type AS payment_type,
-        ytp.fare_amount AS fare_amount,
-        ytp.extra AS extra,
-        ytp.mta_tax AS mta_tax,
-        ytp.tip_amount AS tip_amount,
-        ytp.tolls_amount AS tolls_amount,
+
+    SELECT 
+        ytp.tpep_pickup_datetime AS pickup_datetime, 
+        ytp.tpep_dropoff_datetime AS dropoff_datetime, 
+        ytp.pulocationid AS pulocationid, 
+        ytp.dolocationid AS dolocationid, 
+        tzu.zone AS puzone, 
+        tzo.zone AS dozone, 
+        dateDiff('minute', pickup_datetime, dropoff_datetime) AS trip_time, 
+        ytp.passenger_count AS passenger_count, 
+        ytp.trip_distance AS trip_distance, 
+        ytp.ratecodeid AS ratecodeid, 
+        ytp.payment_type AS payment_type, 
+        ytp.fare_amount AS fare_amount, 
+        ytp.extra AS extra, 
+        ytp.mta_tax AS mta_tax, 
+        ytp.tip_amount AS tip_amount, 
+        ytp.tolls_amount AS tolls_amount, 
         ytp.total_amount AS total_amount
-    FROM clean_different_zones_only_2019 ytp
-    JOIN taxi_zone_lookup tzu ON ytp.pulocationid = tzu.locationid
-    JOIN taxi_zone_lookup tzo ON ytp.dolocationid = tzo.locationid
+    FROM yellow_tripdata_2019_q1 AS ytp 
+    INNER JOIN taxi_zone_lookup AS tzu ON ytp.pulocationid = tzu.locationid
+    INNER JOIN taxi_zone_lookup AS tzo ON ytp.dolocationid = tzo.locationid
+
+
+
+NODE different_zones_2019
+SQL >
+
+    SELECT 
+        pickup_datetime, 
+        dropoff_datetime, 
+        pulocationid, 
+        dolocationid, 
+        puzone, 
+        dozone, 
+        trip_time, 
+        passenger_count, 
+        trip_distance, 
+        ratecodeid, 
+        payment_type, 
+        fare_amount, 
+        extra, 
+        mta_tax, 
+        tip_amount, 
+        tolls_amount, 
+        total_amount
+    FROM select_zone_name 
+    WHERE (pulocationid != dolocationid) AND (toYear(pickup_datetime) = 2019) AND (toYear(dropoff_datetime) = 2019)
 
 TYPE materialized
 DATASOURCE nyc_taxi_zone_clean
+
+
+
+NODE calculate_avg_std
+SQL >
+
+    SELECT 
+            avg(passenger_count) AS avg_passenger, 
+            avg(trip_distance) AS avg_distance,
+            avg(dateDiff('minute',pickup_datetime,dropoff_datetime)) AS avg_time, 
+            stddevPop(passenger_count) AS std_passenger, 
+            stddevPop(trip_distance) AS std_distance,
+            stddevPop(dateDiff('minute',pickup_datetime,dropoff_datetime)) AS std_time
+    FROM nyc_taxi_zone_clean
+
+
+
+NODE calc_zscores_manual
+SQL >
+
+    SELECT pickup_datetime, 
+            dropoff_datetime,
+            trip_time,        
+            trip_time - 17.780161769434212 / 73.32320011058835 as z_time,
+            passenger_count, 
+            passenger_count - 1.5756512724734397 / 1.2302451685284468 as z_passenger, 
+            trip_distance,
+            trip_distance - 3.0367553475515594 / 3.8700316 as z_trip
+    FROM nyc_taxi_zone_clean
+
+
+
+NODE calc_parametric_zscore
+SQL >
+
+    %
+    SELECT pickup_datetime, 
+            dropoff_datetime,
+            puzone,
+            dozone,
+            trip_time,
+            trip_time - {{Float64(avg_time, 0)}} / {{Float64(std_time, 0)}} AS z_time,
+            passenger_count, 
+            passenger_count - {{Float64(avg_passenger, 0)}} / {{Float64(std_passenger, 0)}} AS z_passenger, 
+            trip_distance,
+            trip_distance - {{Float64(avg_distance, 0)}} / {{Float64(std_distance, 0)}} AS z_trip
+    FROM nyc_taxi_zone_clean LIMIT 10000
+
+
+
+NODE calc_zscore_auto
+SQL >
+
+    WITH 
+      (SELECT avg(trip_distance) FROM nyc_taxi_zone_clean) AS avg_distance,
+      (SELECT stddevPop(trip_distance) FROM nyc_taxi_zone_clean) AS std_distance,
+      (SELECT avg(trip_time) FROM nyc_taxi_zone_clean) AS avg_time,
+      (SELECT stddevPop(trip_time) FROM nyc_taxi_zone_clean) AS std_time,
+      (SELECT avg(passenger_count) FROM nyc_taxi_zone_clean) AS avg_passenger,
+      (SELECT stddevPop(passenger_count) FROM nyc_taxi_zone_clean) AS std_passenger
+      SELECT pickup_datetime, 
+            dropoff_datetime,
+            puzone,
+            dozone,
+            trip_time,        
+            trip_time - avg_time / std_time as z_time,
+            passenger_count, 
+            passenger_count - avg_passenger / std_passenger as z_passenger, 
+            trip_distance,
+            trip_distance - avg_distance / std_distance as z_trip
+    FROM nyc_taxi_zone_clean LIMIT 100000
+
+
